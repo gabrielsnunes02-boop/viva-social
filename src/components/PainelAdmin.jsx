@@ -180,7 +180,7 @@ export default function PainelAdmin() {
                     <div className="flex flex-col md:flex-row gap-4">
                       <input 
                         type="text" value={novoNome} onChange={e => setNovoNome(e.target.value)}
-                        placeholder="Ex: Assessoria Jurídica" 
+                        placeholder="Ex: Limpeza de Pele" 
                         className="flex-1 p-4 bg-gray-800 border border-gray-700 rounded-2xl outline-none focus:border-blue-500 font-bold" required
                       />
                       <div className="flex gap-4">
