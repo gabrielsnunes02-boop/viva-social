@@ -26,7 +26,6 @@ export default function Recepcao() {
 
   async function gerarFicha(servico) {
     try {
-      // 1. Salva o atendimento no Supabase
       const { data, error } = await supabase
         .from('atendimentos')
         .insert([{ servico_id: servico.id }])
@@ -35,14 +34,13 @@ export default function Recepcao() {
 
       if (error) throw error;
 
-      // 2. Prepara os dados para a ficha
       setFichaAtual({
         nome: servico.nome,
         numero: data.numero_ficha,
         data: new Date().toLocaleString('pt-BR')
       });
 
-      // 3. Aguarda o React desenhar a ficha e chama a impressão
+      // Dispara a impressão
       setTimeout(() => {
         window.print();
         setFichaAtual(null);
@@ -62,11 +60,46 @@ export default function Recepcao() {
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-black mb-6 text-gray-800 flex items-center gap-2">
+      {/* CSS DE IMPRESSÃO PARA TÉRMICA 58mm */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          /* Esconde tudo do site */
+          body * { visibility: hidden; }
+          
+          /* Configura o papel 58mm */
+          @page { 
+            size: 58mm auto; 
+            margin: 0; 
+          }
+          
+          /* Mostra apenas a área de impressão */
+          #area-impressao, #area-impressao * { 
+            visibility: visible; 
+          }
+          
+          #area-impressao {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 58mm;
+            padding: 2mm;
+            background: white !important;
+          }
+
+          /* Ajustes de texto para impressora térmica */
+          .ticket-text {
+            font-family: monospace;
+            color: black !important;
+            line-height: 1.2;
+          }
+        }
+      ` }} />
+
+      <h2 className="text-2xl font-black mb-6 text-gray-800 flex items-center gap-2 no-print">
         <Printer className="text-blue-600" /> EMISSÃO DE SENHAS
       </h2>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 no-print">
         {servicos.map((s) => (
           <button
             key={s.id}
@@ -74,30 +107,36 @@ export default function Recepcao() {
             style={{ backgroundColor: s.cor_tema }}
             className="h-40 rounded-3xl shadow-xl text-white flex flex-col items-center justify-center p-6 hover:brightness-90 active:scale-95 transition-all"
           >
-            <span className="text-2xl font-black uppercase tracking-tighter">{s.nome}</span>
-            <span className="mt-2 text-xs opacity-80 bg-black/20 px-3 py-1 rounded-full">CLIQUE PARA IMPRIMIR</span>
+            <span className="text-2xl font-black uppercase tracking-tighter text-center">{s.nome}</span>
+            <span className="mt-2 text-[10px] font-bold opacity-80 bg-black/20 px-3 py-1 rounded-full uppercase">Toque para Imprimir</span>
           </button>
         ))}
       </div>
 
-      {/* ÁREA DE IMPRESSÃO (O que sai no papel) */}
+      {/* ÁREA DE IMPRESSÃO (ESTRUTURA PARA 58mm) */}
       {fichaAtual && (
-        <div id="area-impressao" className="print-only">
-          <div style={{ textAlign: 'center', borderBottom: '2px solid black', paddingBottom: '10px' }}>
-            <h1 style={{ fontSize: '22pt', margin: 0 }}>VIVA SOCIAL</h1>
-            <p style={{ fontSize: '10pt' }}>Ação Social Comunitária</p>
+        <div id="area-impressao" className="ticket-text">
+          <div style={{ textAlign: 'center', borderBottom: '1px dashed black', paddingBottom: '8px', marginBottom: '8px' }}>
+            <h1 style={{ fontSize: '16pt', fontWeight: '900', margin: 0 }}>VIVA SOCIAL</h1>
+            <p style={{ fontSize: '8pt', margin: 0 }}>Ação Comunitária</p>
           </div>
-          <div style={{ textAlign: 'center', margin: '20px 0' }}>
-            <p style={{ fontSize: '14pt', margin: 0 }}>SERVIÇO:</p>
-            <p style={{ fontSize: '20pt', fontWeight: 'bold', margin: 0 }}>{fichaAtual.nome}</p>
+
+          <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+            <p style={{ fontSize: '10pt', margin: 0, fontWeight: 'bold' }}>SERVIÇO:</p>
+            <p style={{ fontSize: '14pt', fontWeight: '900', margin: 0, textTransform: 'uppercase' }}>{fichaAtual.nome}</p>
           </div>
-          <div style={{ textAlign: 'center', border: '3px solid black', padding: '10px' }}>
-            <p style={{ fontSize: '12pt', margin: 0 }}>SUA SENHA É:</p>
-            <p style={{ fontSize: '50pt', fontWeight: 'black', margin: 0 }}>#{fichaAtual.numero}</p>
+
+          <div style={{ textAlign: 'center', border: '2px solid black', padding: '10px', margin: '5px 0' }}>
+            <p style={{ fontSize: '9pt', margin: 0 }}>SUA SENHA É:</p>
+            <p style={{ fontSize: '40pt', fontWeight: '900', margin: 0 }}>#{fichaAtual.numero}</p>
           </div>
-          <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '10pt' }}>
+
+          <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '8pt' }}>
             <p>{fichaAtual.data}</p>
-            <p style={{ fontWeight: 'bold', marginTop: '5px' }}>Deus te abençoe!</p>
+            <p style={{ fontWeight: 'bold', marginTop: '4px', fontSize: '10pt' }}>AGUARDE CHAMADA</p>
+            <p style={{ fontSize: '7pt', marginTop: '10px', borderTop: '1px dashed #ccc', pt: '5px' }}>
+              Deus te abençoe!
+            </p>
           </div>
         </div>
       )}
