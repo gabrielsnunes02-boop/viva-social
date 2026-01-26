@@ -26,7 +26,6 @@ export default function Recepcao() {
 
   async function gerarFicha(servico) {
     try {
-      // 1. Salva o atendimento no Supabase usando o servico_id
       const { data, error } = await supabase
         .from('atendimentos')
         .insert([{ servico_id: servico.id }])
@@ -35,14 +34,12 @@ export default function Recepcao() {
 
       if (error) throw error;
 
-      // 2. Prepara os dados para a ficha
       setFichaAtual({
         nome: servico.nome,
         numero: data.numero_ficha,
-        data: new Date().toLocaleString('pt-BR')
+        data: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       });
 
-      // 3. Aguarda o React desenhar e chama a impressão
       setTimeout(() => {
         window.print();
         setFichaAtual(null);
@@ -56,44 +53,33 @@ export default function Recepcao() {
   if (loading) return (
     <div className="flex flex-col items-center p-10">
       <Loader2 className="animate-spin text-blue-600" size={40} />
-      <p className="mt-2 text-gray-600">Carregando recepção...</p>
+      <p className="mt-2 text-gray-600 font-bold uppercase tracking-widest text-xs">A carregar...</p>
     </div>
   );
 
   return (
     <div className="p-4">
-      {/* CSS DE IMPRESSÃO - ESTE BLOCO É O QUE RESOLVE O PAPEL EM BRANCO */}
+      {/* CSS DE IMPRESSÃO COMPACTO */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          /* Esconde tudo que não for a ficha */
           body * { visibility: hidden; }
-          
-          /* Configura o papel térmico 58mm */
           @page { 
             size: 58mm auto; 
             margin: 0; 
           }
-          
           #area-impressao, #area-impressao * { 
             visibility: visible; 
           }
-          
           #area-impressao {
             position: absolute;
             left: 0;
             top: 0;
-            width: 48mm; /* Um pouco menor que 58 para segurança */
-            padding: 2mm;
+            width: 45mm;
+            padding: 1mm;
             background: white !important;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: Arial, sans-serif;
           }
-
-          /* Remove margens forçadas pelo navegador */
-          html, body {
-            margin: 0;
-            padding: 0;
-            background: white !important;
-          }
+          html, body { margin: 0; padding: 0; }
         }
       ` }} />
 
@@ -107,38 +93,40 @@ export default function Recepcao() {
             key={s.id}
             onClick={() => gerarFicha(s)}
             style={{ backgroundColor: s.cor_tema }}
-            className="h-40 rounded-3xl shadow-xl text-white flex flex-col items-center justify-center p-6 hover:brightness-90 active:scale-95 transition-all"
+            className="h-32 rounded-3xl shadow-lg text-white flex flex-col items-center justify-center p-4 hover:brightness-90 active:scale-95 transition-all"
           >
-            <span className="text-2xl font-black uppercase tracking-tighter text-center">{s.nome}</span>
-            <span className="mt-2 text-[10px] font-bold opacity-80 bg-black/20 px-3 py-1 rounded-full uppercase italic">Tocar para Imprimir</span>
+            <span className="text-xl font-black uppercase tracking-tighter text-center">{s.nome}</span>
+            <span className="mt-1 text-[9px] font-bold opacity-70 uppercase">Imprimir Senha</span>
           </button>
         ))}
       </div>
 
-      {/* ÁREA DE IMPRESSÃO (ESTRUTURA PARA DRIVER ORIGINAL) */}
+      {/* ÁREA DE IMPRESSÃO - VERSÃO ECONÓMICA */}
       {fichaAtual && (
-        <div id="area-impressao">
-          <div style={{ textAlign: 'center', borderBottom: '1px dashed black', paddingBottom: '5px', marginBottom: '8px' }}>
-            <h1 style={{ fontSize: '18pt', fontWeight: 'bold', margin: '0' }}>VIVA SOCIAL</h1>
-            <p style={{ fontSize: '9pt', margin: '0' }}>Ação Comunitária</p>
+        <div id="area-impressao" style={{ color: 'black', lineHeight: '1.1' }}>
+          <div style={{ textAlign: 'center', borderBottom: '1px solid black', paddingBottom: '2px' }}>
+            <h1 style={{ fontSize: '13pt', fontWeight: '900', margin: '0' }}>VIVA SOCIAL</h1>
           </div>
 
-          <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-            <p style={{ fontSize: '10pt', margin: '0', fontWeight: 'bold' }}>SERVIÇO:</p>
-            <p style={{ fontSize: '14pt', fontWeight: 'bold', margin: '0', textTransform: 'uppercase' }}>{fichaAtual.nome}</p>
+          <div style={{ textAlign: 'center', marginTop: '4px' }}>
+            <p style={{ fontSize: '9pt', fontWeight: 'bold', margin: '0', textTransform: 'uppercase' }}>
+              {fichaAtual.nome}
+            </p>
           </div>
 
-          <div style={{ textAlign: 'center', border: '2px solid black', padding: '10px', margin: '5px 0' }}>
-            <p style={{ fontSize: '10pt', margin: '0' }}>SUA SENHA É:</p>
-            <p style={{ fontSize: '42pt', fontWeight: '900', margin: '0', lineHeight: '1' }}>#{fichaAtual.numero}</p>
+          <div style={{ textAlign: 'center', border: '1px solid black', margin: '4px 0', padding: '2px' }}>
+            <p style={{ fontSize: '32pt', fontWeight: '900', margin: '0', lineHeight: '1' }}>
+              #{fichaAtual.numero}
+            </p>
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '9pt' }}>
-            <p>{fichaAtual.data}</p>
-            <p style={{ fontWeight: 'bold', marginTop: '5px', fontSize: '11pt' }}>AGUARDE CHAMADA</p>
-            <p style={{ marginTop: '10px', fontSize: '8pt' }}>---------------------------</p>
-            <p style={{ fontSize: '8pt', marginTop: '5px' }}>Deus te abençoe!</p>
+          <div style={{ textAlign: 'center', fontSize: '7pt' }}>
+            <p style={{ margin: '0' }}>{fichaAtual.data} - Aguarde chamada</p>
+            <p style={{ fontSize: '6pt', marginTop: '2px' }}>Deus te abençoe!</p>
           </div>
+          
+          {/* Espaço mínimo para o corte manual da serrilha */}
+          <div style={{ height: '4mm' }}></div>
         </div>
       )}
     </div>
